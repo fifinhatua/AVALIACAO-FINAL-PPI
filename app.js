@@ -16,6 +16,11 @@ const users = [];
 const requireAuth = (req, res, next) => {
   if (req.session.user) {
     res.locals.user = req.session.user;
+
+    // Armazenar a data e hora do último acesso em um cookie
+    const lastAccessTime = new Date().toLocaleString();
+    res.cookie('lastAccess', lastAccessTime, { maxAge: 900000, httpOnly: true });
+
     next();
   } else {
     res.redirect('/login');
@@ -44,7 +49,31 @@ app.post('/login', (req, res) => {
 });
 
 app.get('/menu', (req, res) => {
-  res.sendFile(__dirname + '/views/menu.html');
+  const lastAccessTime = req.cookies.lastAccess || 'N/A';
+
+  const html = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Menu do Sistema</title>
+    </head>
+    <body>
+        <h1>Menu do Sistema</h1>
+        <p>Bem-vindo, ${res.locals.user.name}!</p>
+        <p>Último acesso: ${lastAccessTime}</p>
+
+        <ul>
+          <li><a href="/cadastro">Cadastro de Usuários</a></li>
+          <li><a href="/chat">Bate-papo</a></li>
+        </ul>
+
+        <p><a href="/logout">Logout</a></p>
+    </body>
+    </html>
+  `;
+  res.send(html);
 });
 
 app.get('/chat', (req, res) => {
@@ -79,7 +108,7 @@ app.get('/cadastro', (req, res) => {
             <button type="submit">Cadastrar</button>
         </form>
 
-        
+        <p><a href="/cadastro">Continuar cadastrando</a></p>
         <p><a href="/menu">Voltar para o Menu</a></p>
     </body>
     </html>
@@ -118,7 +147,7 @@ app.post('/cadastro', (req, res) => {
               <button type="submit">Cadastrar</button>
           </form>
 
-          
+          <p><a href="/cadastro">Continuar cadastrando</a></p>
           <p><a href="/menu">Voltar para o Menu</a></p>
       </body>
       </html>
@@ -158,12 +187,26 @@ app.post('/cadastro', (req, res) => {
             <button type="submit">Cadastrar</button>
         </form>
 
-        
+        <p><a href="/cadastro">Continuar cadastrando</a></p>
         <p><a href="/menu">Voltar para o Menu</a></p>
     </body>
     </html>
   `;
   res.send(htmlAfterCadastro);
+});
+
+// Adiciona uma rota para logout
+app.get('/logout', (req, res) => {
+  // Destroi a sessão
+  req.session.destroy(err => {
+    if (err) {
+      console.error('Erro ao fazer logout:', err);
+      res.sendStatus(500);
+    } else {
+      // Redireciona para a página de login
+      res.redirect('/login');
+    }
+  });
 });
 
 app.listen(port, () => {
