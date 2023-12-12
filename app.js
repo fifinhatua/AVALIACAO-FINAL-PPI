@@ -133,7 +133,7 @@ app.get('/cadastro', (req, res) => {
 
             <button type="submit">Cadastrar</button>
         </form>
-        <p><a href="/cadastro">Voltar para o Cadastro</a></p>
+        
         <p><a href="/menu">Voltar para o Menu</a></p>
     </body>
     </html>
